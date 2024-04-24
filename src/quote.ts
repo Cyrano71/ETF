@@ -40,8 +40,8 @@ async function quote() {
         0
       )
 
-      const amount = toReadableAmount(quotedAmountOut, CurrentConfig.tokens.out.decimals)
-      console.log(amount);
+      const quotedAmountOutMin = toReadableAmount(quotedAmountOut, CurrentConfig.tokens.out.decimals)
+      console.log(quotedAmountOutMin);
 }
 
 async function getPoolConstants(tokenIn: Token, tokenOut: Token, poolFee: number, signer: ethers.Wallet) {
