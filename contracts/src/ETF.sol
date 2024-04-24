@@ -89,13 +89,18 @@ contract ETF is IEtfEvents {
         }
     }
 
+    function getAddress() public returns (address) {
+        return address(this);
+    }
+
     struct Args {
-        IERC20 tokenIn;
-        IERC20 tokenOut;
+        address tokenIn;
+        address tokenOut;
         uint amountIn;
         uint amountOutMinimum;
         uint24 poolFee; //3000
     }
+
     /*
     //https://docs.uniswap.org/contracts/v3/guides/swaps/single-swaps
     //https://github.com/arcanum-protocol/arcanum-contracts/blob/master/src/trader/Trader.sol
@@ -106,11 +111,18 @@ contract ETF is IEtfEvents {
     /// @return amountOut The amount of WETH9 received.
     */
     function uniswapV3ExactInputSingle(Args calldata args) internal returns (uint amountOut) {
-        TransferHelper.safeApprove(address(args.tokenIn), address(swapRouter), args.amountIn);
+        //TransferHelper.safeApprove(address(args.tokenIn), address(swapRouter), args.amountIn);
+
+        // Transfer the specified amount of WETH9 to this contract.
+        //TransferHelper.safeTransferFrom(args.tokenIn, msg.sender, address(this), args.amountIn);
+
+		// Approve the router to spend WETH9.
+        TransferHelper.safeApprove(args.tokenIn, address(swapRouter), args.amountIn);
+
         ISwapRouter.ExactInputSingleParams memory params =
             ISwapRouter.ExactInputSingleParams({
-                tokenIn: address(args.tokenIn), //DAI
-                tokenOut: address(args.tokenOut), //WETH
+                tokenIn: args.tokenIn, //WETH 
+                tokenOut: args.tokenOut, //DAI
                 fee: args.poolFee,
                 recipient: address(this),
                 deadline: block.timestamp,
@@ -125,7 +137,7 @@ contract ETF is IEtfEvents {
         emit SwapChange(params.tokenIn, params.tokenOut, args.amountIn, amountOut);
     }
 
-    function rebalance(Args[] calldata args) external {
+    function rebalance(Args[] calldata args) external onlyOwner {
          uint len = args.length;
          for (uint i; i < len; ++i) {
             uniswapV3ExactInputSingle(args[i]);

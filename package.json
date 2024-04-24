@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "ganache": "ganache --wallet.seed myCustomSeed",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -24,6 +25,7 @@
     "@openzeppelin/contracts": "^5.0.2",
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.4",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "ganache": "^7.9.2"
   }
 }

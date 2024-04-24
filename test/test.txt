@@ -1,0 +1,44 @@
+ it("Should provide a caller with more DAI than they started with after a swap", async function () {
+    
+    /* Deploy the SimpleSwap contract */
+ 
+    const simpleSwap = await simpleSwapFactory.deploy(SwapRouterAddress);
+    await simpleSwap.waitForDeployment();
+  
+    let signers = await ethers.getSigners();
+ 
+
+    /* Connect to WETH and wrap some eth  */
+    const WETH = new ethers.Contract(WETH_ADDRESS, ercAbi, signers[0]);
+    const deposit = await WETH.deposit({ value: ethers.parseEther("10") });
+    await deposit.wait();
+    
+    /* Check Initial DAI Balance */ 
+    const DAI = new ethers.Contract(DAI_ADDRESS, ercAbi, signers[0]);
+    const expandedDAIBalanceBefore = await DAI.balanceOf(signers[0].address);
+    const DAIBalanceBefore = Number(ethers.formatUnits(expandedDAIBalanceBefore, DAI_DECIMALS));
+    console.log("DAI Balance Before : ", DAIBalanceBefore)
+    /* Approve the swapper contract to spend WETH for me */
+    await WETH.approve(simpleSwap.address, ethers.parseEther("1"));
+    
+    /* Execute the swap */
+    const amountIn = ethers.parseEther("0.1"); 
+
+    const arg = {
+      tokenIn: DAI_ADDRESS,
+      tokenOut: WETH_ADDRESS,
+      amountIn: amountIn,
+      amountOutMinimum: 0,
+      poolFee: 3000
+    }
+    console.log("Arguments : ", arg)
+    const swap = await simpleSwap.uniswapV3ExactInputSingle(arg, { gasLimit: 300000 })
+    swap.wait(); 
+    
+    /* Check DAI end balance */
+    const expandedDAIBalanceAfter = await DAI.balanceOf(signers[0].address);
+    const DAIBalanceAfter = Number(ethers.formatUnits(expandedDAIBalanceAfter, DAI_DECIMALS));
+    console.log("DAI Balance After : ", DAIBalanceAfter)
+    expect( DAIBalanceAfter )
+      .is.greaterThan(DAIBalanceBefore); 
+  });
