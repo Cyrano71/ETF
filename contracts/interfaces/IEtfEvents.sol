@@ -63,4 +63,11 @@ interface IEtfEvents {
     /// and cashbacks
     /// @param totalCollectedCashbacks shows sum of all collected cashbacks
     event CollectedFeesChange(uint totalCollectedBalance, uint totalCollectedCashbacks);
+
+    /// @notice Thrown every time swap is done
+    /// @param tokenIn from
+    /// @param tokenOut to
+    /// @param amountIn swap
+    /// @param amountOut result
+    event SwapChange(address tokenIn, address tokenOut, uint amountIn, uint amountOut);
 }

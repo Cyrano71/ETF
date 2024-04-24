@@ -5,7 +5,7 @@ pragma abicoder v2;
 import {MpAsset} from "../lib/MpContext.sol";
 import {FeedInfo, FeedType} from "../lib/Price.sol";
 import {IEtfEvents} from "../interfaces/IEtfEvents.sol";
-import {ERC20, IERC20} from "@openzeppelin/token/ERC20/ERC20.sol";
+import {ERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
 
@@ -96,15 +96,21 @@ contract ETF is IEtfEvents {
         uint amountOutMinimum;
         uint24 poolFee; //3000
     }
+    /*
     //https://docs.uniswap.org/contracts/v3/guides/swaps/single-swaps
     //https://github.com/arcanum-protocol/arcanum-contracts/blob/master/src/trader/Trader.sol
-
-    function trade(Args calldata args) external payable returns (uint amountOut) {
+    /// @notice swapExactInputSingle swaps a fixed amount of DAI for a maximum possible amount of WETH9
+    /// using the DAI/WETH9 0.3% pool by calling `exactInputSingle` in the swap router.
+    /// @dev The calling address must approve this contract to spend at least `amountIn` worth of its DAI for this function to succeed.
+    /// @param amountIn The exact amount of DAI that will be swapped for WETH9.
+    /// @return amountOut The amount of WETH9 received.
+    */
+    function uniswapV3ExactInputSingle(Args calldata args) internal returns (uint amountOut) {
         TransferHelper.safeApprove(address(args.tokenIn), address(swapRouter), args.amountIn);
         ISwapRouter.ExactInputSingleParams memory params =
             ISwapRouter.ExactInputSingleParams({
-                tokenIn: address(args.tokenIn),
-                tokenOut: address(args.tokenOut),
+                tokenIn: address(args.tokenIn), //DAI
+                tokenOut: address(args.tokenOut), //WETH
                 fee: args.poolFee,
                 recipient: address(this),
                 deadline: block.timestamp,
@@ -115,5 +121,14 @@ contract ETF is IEtfEvents {
 
         // The call to `exactInputSingle` executes the swap.
         amountOut = swapRouter.exactInputSingle(params);
+
+        emit SwapChange(params.tokenIn, params.tokenOut, args.amountIn, amountOut);
+    }
+
+    function rebalance(Args[] calldata args) external {
+         uint len = args.length;
+         for (uint i; i < len; ++i) {
+            uniswapV3ExactInputSingle(args[i]);
+        }
     }
 }
