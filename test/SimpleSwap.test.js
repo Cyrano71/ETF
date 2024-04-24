@@ -17,8 +17,8 @@ const ercAbi = [
   "function approve(address spender, uint256 amount) returns (bool)",
 ];
 
-describe("SimpleSwap", function () {
-  it("interact with sc", async function () {
+describe("ETF", function () {
+  it("rebalance etf with uniswap v3", async function () {
     const simpleSwapFactory = await ethers.getContractFactory("ETF");
     /*
      const simpleSwap = await simpleSwapFactory.deploy(SwapRouterAddress);
