@@ -1,10 +1,17 @@
 ### Implementation ETF rebalancing
 
 # Commands
+
+1. For ETF interaction
 ```
 npx hardhat node --fork https://eth-mainnet.alchemyapi.io/v2/{YOUR_API_KEY}
 
 npx hardhat test --network localhost
+```
+
+2. To get quote price
+```
+npm run quote
 ```
 
 # Result

@@ -19,3 +19,5 @@ config-hidden
 global-bundle.pem
 
 .vscode
+
+dist/
