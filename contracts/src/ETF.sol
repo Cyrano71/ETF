@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 pragma abicoder v2;
 
 import {MpAsset} from "../lib/MpContext.sol";
-import {FeedInfo, FeedType} from "../lib/Price.sol";
+import {FeedInfo, FeedType, UniV3Feed} from "../lib/Price.sol";
 import {IEtfEvents} from "../interfaces/IEtfEvents.sol";
 import {ERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
@@ -16,7 +16,7 @@ contract ETF is IEtfEvents {
    uint public totalTargetShares;
 
     mapping(address => MpAsset) internal assets;
-    mapping(address => FeedInfo) internal prices;
+    mapping(address => FeedInfo) internal priceFeeds;
 
     address owner;
 
@@ -34,17 +34,25 @@ contract ETF is IEtfEvents {
         // execute the rest of the code.
         _;
     }
+   
+    function getAddress() public returns (address) {
+        return address(this);
+    }
 
     function getPriceFeed(address asset)
         external
         view
         returns (FeedInfo memory priceFeed)
     {
-        priceFeed = prices[asset];
+        priceFeed = priceFeeds[asset];
+    }
+
+    function getOracle(address asset) public view returns (address oracle) {
+        oracle = priceFeeds[asset].univ3.oracle;
     }
 
     function getPrice(address asset) public view returns (uint price) {
-        price = prices[asset].getPrice();
+        price = priceFeeds[asset].getPrice();
     }
 
     function getAsset(address assetAddress) public view returns (MpAsset memory asset) {
@@ -75,7 +83,8 @@ contract ETF is IEtfEvents {
     function updatePrices(
         address[] calldata assetAddresses,
         FeedType[] calldata kinds,
-        bytes[] calldata feedData
+        bytes[] calldata feedData,
+        UniV3Feed[] calldata uniV3Feed
     )
         external
         onlyOwner
@@ -83,14 +92,10 @@ contract ETF is IEtfEvents {
         uint len = assetAddresses.length;
         for (uint i; i < len; ++i) {
             address assetAddress = assetAddresses[i];
-            FeedInfo memory feed = FeedInfo({kind: kinds[i], data: feedData[i]});
-            prices[assetAddress] = feed;
+            FeedInfo memory feed = FeedInfo({kind: kinds[i], data: feedData[i], univ3 : uniV3Feed[i]});
+            priceFeeds[assetAddress] = feed;
             emit PriceFeedChange(assetAddress, feed);
         }
-    }
-
-    function getAddress() public returns (address) {
-        return address(this);
     }
 
     struct Args {
